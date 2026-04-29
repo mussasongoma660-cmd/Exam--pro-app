@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#080c18">
+<title>Exam Pro Academy</title>
+<link rel="manifest" href="manifest.json">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #080c18;
+  --card: #0d1525;
+  --border: #1a2540;
+  --blue: #3b6ef8;
+  --blue2: #1d4ed8;
+  --green: #10b981;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+  --text: #e8eef8;
+  --muted: #4a5980;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── SPLASH SCREEN ── */
+#splash {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  transition: opacity .5s ease, transform .5s ease;
+}
+#splash.hidden {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+.logo-wrap {
+  position: relative;
+  width: 100px; height: 100px;
+  margin-bottom: 28px;
+}
+.logo-ring {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--blue);
+  border-right-color: var(--blue);
+  animation: spin 1.2s linear infinite;
+}
+.logo-ring2 {
+  position: absolute; inset: 8px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-bottom-color: #10b98160;
+  animation: spin 1.8s linear infinite reverse;
+}
+.logo-inner {
+  position: absolute; inset: 16px;
+  background: linear-gradient(135deg, #0f1e45, #1a3080);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2em;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.logo-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5em;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, #fff 30%, #93c5fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.logo-sub {
+  font-size: .78em;
+  color: var(--muted);
+  margin-bottom: 40px;
+  letter-spacing: .05em;
+}
+
+.status-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 12px var(--blue);
+  animation: pulse 1s ease infinite;
+}
+@keyframes pulse {
+  0%,100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.4); opacity: .6; }
+}
+.status-text {
+  font-size: .82em;
+  color: var(--muted);
+  text-align: center;
+  min-height: 20px;
+}
+
+/* ── OFFLINE SCREEN ── */
+#offline {
+  display: none;
+  position: fixed; inset: 0;
+  background: var(--bg);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  text-align: center;
+  z-index: 999;
+}
+#offline.show { display: flex; }
+
+.offline-icon {
+  font-size: 4em;
+  margin-bottom: 20px;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+.offline-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.4em;
+  font-weight: 800;
+  color: var(--red);
+  margin-bottom: 8px;
+}
+.offline-msg {
+  font-size: .85em;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 28px;
+  max-width: 280px;
+}
+.retry-btn {
+  background: linear-gradient(135deg, var(--blue2), var(--blue));
+  color: #fff;
+  border: none;
+  padding: 14px 36px;
+  border-radius: 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .9em;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 20px #3b6ef840;
+  transition: all .2s;
+  width: 100%;
+  max-width: 260px;
+}
+.retry-btn:active { transform: scale(.97); }
+
+.offline-hint {
+  margin-top: 16px;
+  font-size: .72em;
+  color: var(--muted);
+}
+
+/* ── WEBVIEW FRAME ── */
+#webview-wrap {
+  flex: 1;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+#webview-wrap.show { display: flex; }
+
+.top-bar {
+  background: #080c18;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.top-bar .brand {
+  font-family: 'Syne', sans-serif;
+  font-size: .85em;
+  font-weight: 700;
+  color: #93c5fd;
+  flex: 1;
+}
+.conn-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .68em;
+  color: var(--green);
+  background: #10b98115;
+  border: 1px solid #10b98130;
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+.conn-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s ease infinite;
+}
+
+iframe#app-frame {
+  flex: 1;
+  border: none;
+  width: 100%;
+  background: var(--bg);
+}
+
+/* ── BOTTOM RELOAD ── */
+.bottom-bar {
+  background: #080c18;
+  border-top: 1px solid var(--border);
+  padding: 8px 16px;
+  display: flex;
+  gap: 8px;
+}
+.bottom-btn {
+  flex: 1;
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: .78em;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all .15s;
+}
+.bottom-btn:active { transform: scale(.97); background: #1a2540; }
+.bottom-btn.primary {
+  background: linear-gradient(135deg, #1d2f6f, var(--blue2));
+  border-color: var(--blue);
+  color: #fff;
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="logo-wrap">
+    <div class="logo-ring"></div>
+    <div class="logo-ring2"></div>
+    <div class="logo-inner">🎓</div>
+  </div>
+  <div class="logo-title">Exam Pro Academy</div>
+  <div class="logo-sub">NTA LEVEL 4 · 5 · 6</div>
+  <div class="status-wrap">
+    <div class="status-dot"></div>
+    <div class="status-text" id="status-txt">Inaungana na server...</div>
+  </div>
+</div>
+
+<!-- OFFLINE -->
+<div id="offline">
+  <div class="offline-icon">📡</div>
+  <div class="offline-title">Server Imezimwa</div>
+  <div class="offline-msg">
+    Server ya Exam Pro Academy haifanyi kazi sasa hivi.<br><br>
+    Mwambie admin awashe server, kisha jaribu tena.
+  </div>
+  <button class="retry-btn" onclick="startApp()">🔄 Jaribu Tena</button>
+  <div class="offline-hint">Inahitaji server ya Termux ifanye kazi</div>
+</div>
+
+<!-- WEBVIEW -->
+<div id="webview-wrap">
+  <div class="top-bar">
+    <span class="brand">🎓 Exam Pro Academy</span>
+    <div class="conn-badge">
+      <div class="conn-dot"></div>
+      <span>LIVE</span>
+    </div>
+  </div>
+  <iframe id="app-frame" src="about:blank" allow="camera;microphone"></iframe>
+  <div class="bottom-bar">
+    <button class="bottom-btn" onclick="goHome()">🏠 Home</button>
+    <button class="bottom-btn" onclick="goBack()">← Rudi</button>
+    <button class="bottom-btn primary" onclick="startApp()">🔄 Reload</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  WEKA HAPA MAELEZO YA TELEGRAM YAKO
+// ═══════════════════════════════════════════════════
+const TG_BOT_TOKEN = "WEKA_TOKEN_YAKO_HAPA";   // e.g. 7123456789:AAFxxx
+const TG_CHAT_ID   = "WEKA_CHAT_ID_YAKO_HAPA"; // e.g. 123456789
+// ═══════════════════════════════════════════════════
+
+const $ = id => document.getElementById(id);
+let currentUrl = null;
+let retryCount = 0;
+
+function setStatus(msg) {
+  $("status-txt").textContent = msg;
+}
+
+// Pata URL ya sasa kutoka Telegram messages
+async function fetchUrlFromTelegram() {
+  try {
+    const base = `https://api.telegram.org/bot${TG_BOT_TOKEN}`;
+
+    // Pata message za hivi karibuni (offset=-10 = messages 10 za mwisho)
+    const res = await fetch(`${base}/getUpdates?limit=20&allowed_updates=["message"]`);
+    if (!res.ok) throw new Error("Telegram API error");
+
+    const data = await res.json();
+    if (!data.ok) throw new Error("Telegram error: " + JSON.stringify(data));
+
+    const updates = data.result || [];
+
+    // Tafuta message ya mwisho iliyo na URL ya trycloudflare
+    let foundUrl = null;
+    for (let i = updates.length - 1; i >= 0; i--) {
+      const msg = updates[i]?.message?.text || "";
+      const match = msg.match(/https:\/\/[a-zA-Z0-9\-]+\.trycloudflare\.com/);
+      if (match) {
+        foundUrl = match[0];
+        break;
+      }
+    }
+
+    return foundUrl;
+  } catch (e) {
+    console.error("Telegram fetch error:", e);
+    return null;
+  }
+}
+
+// Angalia URL inafanya kazi (server iko online)
+async function checkUrl(url) {
+  try {
+    // Tumia /health endpoint ya Flask
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(`${url}/health`, {
+      signal: controller.signal,
+      mode: 'no-cors'
+    });
+    clearTimeout(timeout);
+    return true; // no-cors returns opaque response = server ipo
+  } catch (e) {
+    // Jaribu root path
+    try {
+      const controller2 = new AbortController();
+      const timeout2 = setTimeout(() => controller2.abort(), 8000);
+      await fetch(url, { signal: controller2.signal, mode: 'no-cors' });
+      clearTimeout(timeout2);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+function showOffline() {
+  $("splash").classList.add("hidden");
+  $("offline").classList.add("show");
+  $("webview-wrap").classList.remove("show");
+}
+
+function showApp(url) {
+  currentUrl = url;
+  $("app-frame").src = url;
+  setTimeout(() => {
+    $("splash").classList.add("hidden");
+    $("offline").classList.remove("show");
+    $("webview-wrap").classList.add("show");
+  }, 500);
+}
+
+async function startApp() {
+  // Reset UI
+  $("splash").classList.remove("hidden");
+  $("offline").classList.remove("show");
+  $("webview-wrap").classList.remove("show");
+  retryCount++;
+
+  setStatus("Inaomba URL kutoka Telegram...");
+  await new Promise(r => setTimeout(r, 500));
+
+  const url = await fetchUrlFromTelegram();
+
+  if (!url) {
+    setStatus("URL haijapatikana — server imezimwa?");
+    await new Promise(r => setTimeout(r, 1500));
+    showOffline();
+    return;
+  }
+
+  setStatus(`URL imepatikana ✓\nInaunganisha...`);
+  await new Promise(r => setTimeout(r, 800));
+
+  const online = await checkUrl(url);
+
+  if (!online) {
+    setStatus("Server haifanyi kazi saa hii...");
+    await new Promise(r => setTimeout(r, 1500));
+    showOffline();
+    return;
+  }
+
+  setStatus("Imefanikiwa! Inafungua...");
+  showApp(url);
+}
+
+function goHome() {
+  if (currentUrl) $("app-frame").src = currentUrl;
+}
+
+function goBack() {
+  try { $("app-frame").contentWindow.history.back(); } catch(e) {}
+}
+
+// Anza otomatiki ukifungua app
+window.addEventListener("load", startApp);
+</script>
+</body>
+</html>
