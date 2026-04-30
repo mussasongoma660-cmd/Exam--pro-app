@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#080c18">
+<title>Exam Pro Academy</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:sans-serif;background:#080c18;color:#e8eef8;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+#splash{
+  position:fixed;inset:0;
+  background:#080c18;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  transition:opacity 0.3s;
+}
+#splash.hide{
+  display:none !important;
+  opacity:0;
+  pointer-events:none;
+}
+
+.ring{
+  width:80px;height:80px;
+  border-radius:50%;
+  border:3px solid #1a2540;
+  border-top-color:#3b6ef8;
+  border-right-color:#3b6ef8;
+  animation:spin 1s linear infinite;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:24px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+h1{font-size:1.4em;font-weight:800;margin-bottom:6px}
+.sub{font-size:.78em;color:#4a5980;margin-bottom:32px}
+#status{font-size:.82em;color:#4a5980;text-align:center;padding:0 32px}
+
+#offline{
+  display:none;
+  position:fixed;inset:0;
+  background:#080c18;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:32px;text-align:center;
+  z-index:9998;
+}
+#offline.show{display:flex !important}
+
+.btn{
+  background:#1d4ed8;color:#fff;border:none;
+  padding:13px 0;border-radius:12px;
+  font-size:.88em;font-weight:600;
+  width:100%;max-width:260px;cursor:pointer;
+  margin-bottom:10px;
+}
+
+#appwrap{
+  display:none;
+  flex-direction:column;
+  flex:1;
+  position:relative;
+  z-index:1;
+}
+#appwrap.show{display:flex !important}
+
+.topbar{
+  background:#080c18;
+  border-bottom:1px solid #1a2540;
+  padding:8px 14px;
+  display:flex;align-items:center;gap:10px;
+  min-height:42px;
+  z-index:10;
+}
+.brand{font-weight:700;font-size:.85em;color:#93c5fd;flex:1}
+.live{
+  font-size:.68em;color:#10b981;
+  background:#10b98115;
+  border:1px solid #10b98130;
+  padding:3px 9px;border-radius:20px;
+}
+
+#frame{
+  flex:1;border:none;
+  width:100%;
+  background:#080c18;
+  display:block;
+}
+
+.botbar{
+  background:#080c18;
+  border-top:1px solid #1a2540;
+  padding:8px 12px;
+  display:flex;gap:8px;
+}
+.bb{
+  flex:1;background:#0d1525;
+  border:1px solid #1a2540;
+  color:#e8eef8;padding:10px 4px;
+  border-radius:10px;font-size:.76em;
+  font-weight:600;cursor:pointer;
+}
+.bb.p{background:#1d3a8a;border-color:#3b6ef8;color:#fff}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="ring"><div style="font-size:2em">🎓</div></div>
+  <h1>Exam Pro Academy</h1>
+  <div class="sub">NTA LEVEL 4 · 5 · 6</div>
+  <div id="status">Inapakua URL ya server...</div>
+</div>
+
+<!-- OFFLINE -->
+<div id="offline">
+  <div style="font-size:3.5em;margin-bottom:16px">📡</div>
+  <div style="font-size:1.2em;font-weight:800;color:#ef4444;margin-bottom:8px">Server Imezimwa</div>
+  <div style="font-size:.83em;color:#4a5980;line-height:1.6;margin-bottom:24px">
+    Mwambie admin awashe server,<br>kisha jaribu tena.
+  </div>
+  <button class="btn" onclick="startApp()">🔄 Jaribu Tena</button>
+</div>
+
+<!-- APP -->
+<div id="appwrap">
+  <div class="topbar">
+    <span class="brand">🎓 Exam Pro Academy</span>
+    <span class="live">● LIVE</span>
+  </div>
+  <iframe id="frame" src="about:blank" allow="camera;microphone;fullscreen"></iframe>
+  <div class="botbar">
+    <button class="bb" onclick="goHome()">🏠 Home</button>
+    <button class="bb" onclick="goBack()">← Rudi</button>
+    <button class="bb p" onclick="startApp()">🔄 Reload</button>
+  </div>
+</div>
+
+<script>
+const RAW_URL = "https://raw.githubusercontent.com/mussasongoma660-cmd/Exam--pro-app/main/url.txt";
+let currentUrl = null;
+
+function setStatus(m){ document.getElementById('status').textContent = m; }
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+function hideSplash(){
+  const s = document.getElementById('splash');
+  s.style.opacity = '0';
+  setTimeout(()=>{ s.classList.add('hide'); }, 300);
+}
+
+function showOffline(){
+  hideSplash();
+  document.getElementById('offline').classList.add('show');
+  document.getElementById('appwrap').classList.remove('show');
+}
+
+function showApp(url){
+  currentUrl = url;
+  const frame = document.getElementById('frame');
+  frame.src = url;
+  frame.onload = function(){
+    hideSplash();
+    document.getElementById('offline').classList.remove('show');
+    document.getElementById('appwrap').classList.add('show');
+  };
+  // Backup — kama onload haifanyi kazi
+  setTimeout(()=>{
+    if(document.getElementById('splash').style.display !== 'none'){
+      hideSplash();
+      document.getElementById('offline').classList.remove('show');
+      document.getElementById('appwrap').classList.add('show');
+    }
+  }, 4000);
+}
+
+async function startApp(){
+  // Reset
+  const splash = document.getElementById('splash');
+  splash.classList.remove('hide');
+  splash.style.display = 'flex';
+  splash.style.opacity = '1';
+  document.getElementById('offline').classList.remove('show');
+  document.getElementById('appwrap').classList.remove('show');
+  document.getElementById('frame').src = 'about:blank';
+
+  setStatus('Inapakua URL ya server...');
+
+  try{
+    const res = await fetch(RAW_URL + '?t=' + Date.now(), {cache:'no-store'});
+
+    if(!res.ok){
+      setStatus('Server imezimwa...');
+      await sleep(1200);
+      showOffline();
+      return;
+    }
+
+    const url = (await res.text()).trim();
+
+    if(!url || !url.startsWith('https://')){
+      setStatus('Server imezimwa...');
+      await sleep(1200);
+      showOffline();
+      return;
+    }
+
+    setStatus('URL imepatikana ✓ Inaunganisha...');
+    await sleep(600);
+    showApp(url);
+
+  } catch(e){
+    setStatus('Hitilafu ya mtandao');
+    await sleep(1200);
+    showOffline();
+  }
+}
+
+function goHome(){ if(currentUrl) document.getElementById('frame').src = currentUrl; }
+function goBack(){ try{ document.getElementById('frame').contentWindow.history.back(); }catch(e){} }
+
+window.addEventListener('load', startApp);
+</script>
+</body>
+</html>
