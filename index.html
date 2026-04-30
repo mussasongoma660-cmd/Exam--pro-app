@@ -1,81 +1,162 @@
-<!DOCTYPE html>
-<html lang="sw">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#080c18">
-<title>Exam Pro Academy</title>
-<link rel="manifest" href="manifest.json">
-</head>
-<body style="margin:0;background:#080c18;color:#e8eef8;font-family:sans-serif;display:flex;flex-direction:column;height:100vh">
-<div id="splash" style="position:fixed;inset:0;background:#080c18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000">
-  <div style="font-size:4em;margin-bottom:20px">🎓</div>
-  <div style="font-size:1.4em;font-weight:800;margin-bottom:8px">Exam Pro Academy</div>
-  <div style="font-size:.8em;color:#4a5980;margin-bottom:40px">NTA LEVEL 4 · 5 · 6</div>
-  <div id="status" style="font-size:.85em;color:#4a5980">Inaungana na server...</div>
-</div>
-<div id="offline" style="display:none;position:fixed;inset:0;background:#080c18;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center">
-  <div style="font-size:3em;margin-bottom:16px">📡</div>
-  <div style="font-size:1.2em;font-weight:800;color:#ef4444;margin-bottom:8px">Server Imezimwa</div>
-  <div style="font-size:.85em;color:#4a5980;margin-bottom:28px">Mwambie admin awashe server, kisha jaribu tena.</div>
-  <button onclick="startApp()" style="background:#1d4ed8;color:#fff;border:none;padding:14px 36px;border-radius:14px;font-size:.9em;font-weight:600;width:100%;max-width:260px">🔄 Jaribu Tena</button>
-</div>
-<div id="appwrap" style="display:none;flex-direction:column;flex:1">
-  <div style="background:#080c18;border-bottom:1px solid #1a2540;padding:8px 16px;display:flex;align-items:center">
-    <span style="font-weight:700;color:#93c5fd;flex:1">🎓 Exam Pro Academy</span>
-    <span style="font-size:.7em;color:#10b981;background:#10b98115;border:1px solid #10b98130;padding:3px 9px;border-radius:20px">● LIVE</span>
-  </div>
-  <iframe id="frame" src="about:blank" style="flex:1;border:none;width:100%;background:#080c18"></iframe>
-  <div style="background:#080c18;border-top:1px solid #1a2540;padding:8px 16px;display:flex;gap:8px">
-    <button onclick="goHome()" style="flex:1;background:#0d1525;border:1px solid #1a2540;color:#e8eef8;padding:10px;border-radius:10px;font-size:.78em;font-weight:600">🏠 Home</button>
-    <button onclick="goBack()" style="flex:1;background:#0d1525;border:1px solid #1a2540;color:#e8eef8;padding:10px;border-radius:10px;font-size:.78em;font-weight:600">← Rudi</button>
-    <button onclick="startApp()" style="flex:1;background:#1d4ed8;border:1px solid #3b6ef8;color:#fff;padding:10px;border-radius:10px;font-size:.78em;font-weight:600">🔄 Reload</button>
-  </div>
-</div>
 <script>
-const TG_BOT_TOKEN = "8429654460:AAGJ6NRMCERnBQIT4APAT0EVaFqZbIr9MJM";
-const TG_CHAT_ID = "5927692010";
-let currentUrl = null;
-function setStatus(m){ document.getElementById('status').textContent = m; }
+const GITHUB_API_URL = "https://api.github.com/repos/mussasongoma660-cmd/Exam--pro-app/contents/url.txt";
+const CHECK_INTERVAL = 15000;
+const OFFLINE_RETRY  = 30;
+const IFRAME_TIMEOUT = 45000;
+
+const splash  = document.getElementById('splash');
+const offline = document.getElementById('offline');
+const appwrap = document.getElementById('appwrap');
+const frame   = document.getElementById('frame');
+const retryBtn= document.getElementById('retryBtn');
+const retryCD = document.getElementById('retryCD');
+const cdSec   = document.getElementById('cdSec');
+
+let checkTimer=null, retryTimer=null, cdTimer=null, iframeWatcher=null, isBusy=false;
+let currentUrl=null;
+
+function setStatus(m){ document.getElementById('status').textContent=m; }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+function clearAllTimers(){
+  if(checkTimer)    clearInterval(checkTimer),    checkTimer=null;
+  if(retryTimer)    clearTimeout(retryTimer),     retryTimer=null;
+  if(cdTimer)       clearInterval(cdTimer),        cdTimer=null;
+  if(iframeWatcher) clearTimeout(iframeWatcher),  iframeWatcher=null;
+}
+
+async function fetchUrlViaAPI(){
+  const res = await fetch(GITHUB_API_URL, {
+    cache: 'no-store',
+    headers: {
+      'Accept': 'application/vnd.github.v3+json',
+      'X-Timestamp': Date.now().toString()
+    },
+    signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined
+  });
+  if(!res.ok) throw new Error('API_FAIL:'+res.status);
+  const json = await res.json();
+  const b64  = json.content.replace(/\n/g,'').trim();
+  return atob(b64).trim();
+}
+
 function showOffline(){
-  document.getElementById('splash').style.display='none';
-  document.getElementById('offline').style.display='flex';
-  document.getElementById('appwrap').style.display='none';
-}
-function showApp(url){
-  currentUrl=url;
-  document.getElementById('frame').src=url;
-  setTimeout(()=>{
-    document.getElementById('splash').style.display='none';
-    document.getElementById('offline').style.display='none';
-    document.getElementById('appwrap').style.display='flex';
-  },500);
-}
-async function startApp(){
-  document.getElementById('splash').style.display='flex';
-  document.getElementById('offline').style.display='none';
-  document.getElementById('appwrap').style.display='none';
-  setStatus('Inaomba URL kutoka Telegram...');
-  try{
-    const r=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/getUpdates?limit=20`);
-    const d=await r.json();
-    let url=null;
-    const updates=d.result||[];
-    for(let i=updates.length-1;i>=0;i--){
-      const txt=updates[i]?.message?.text||'';
-      const m=txt.match(/https:\/\/[a-zA-Z0-9\-]+\.trycloudflare\.com/);
-      if(m){url=m[0];break;}
+  clearAllTimers();
+  if(frame){ frame.src='about:blank'; frame.style.display='none'; }
+  splash.style.display  = 'none';
+  offline.style.display = 'flex';
+  appwrap.style.display = 'none';
+  if(retryBtn) retryBtn.disabled = false;
+  isBusy = false;
+
+  let sec = OFFLINE_RETRY;
+  if(cdSec) cdSec.textContent = sec;
+  if(retryCD) retryCD.style.display = 'block';
+  cdTimer = setInterval(()=>{
+    sec--;
+    if(cdSec) cdSec.textContent = sec;
+    if(sec <= 0){
+      clearInterval(cdTimer); cdTimer=null;
+      if(retryCD) retryCD.style.display='none';
+      startApp();
     }
-    if(!url){setStatus('Server imezimwa...');await new Promise(r=>setTimeout(r,1500));showOffline();return;}
-    setStatus('URL imepatikana ✓ Inaunganisha...');
-    await new Promise(r=>setTimeout(r,800));
-    showApp(url);
-  }catch(e){setStatus('Hitilafu ya mtandao');await new Promise(r=>setTimeout(r,1500));showOffline();}
+  }, 1000);
 }
-function goHome(){if(currentUrl)document.getElementById('frame').src=currentUrl;}
-function goBack(){try{document.getElementById('frame').contentWindow.history.back();}catch(e){}}
-window.addEventListener('load',startApp);
-</script>
-</body>
-</html>
+
+function showApp(url){
+  clearAllTimers();
+  currentUrl = url;
+  if(retryCD) retryCD.style.display='none';
+
+  let loaded = false;
+
+  frame.onload = ()=>{
+    try{ if(frame.contentWindow.location.href==='about:blank') return; }catch(e){}
+    loaded = true;
+    if(iframeWatcher){ clearTimeout(iframeWatcher); iframeWatcher=null; }
+    frame.style.display = 'block';
+    splash.style.display  = 'none';
+    offline.style.display = 'none';
+    appwrap.style.display = 'flex';
+    isBusy = false;
+    startLiveCheck();
+  };
+
+  iframeWatcher = setTimeout(()=>{
+    if(!loaded){ frame.src='about:blank'; showOffline(); }
+  }, IFRAME_TIMEOUT);
+
+  frame.src = url;
+}
+
+function startLiveCheck(){
+  if(checkTimer) clearInterval(checkTimer);
+  let failCount = 0;
+  const MAX_FAIL = 3;
+
+  checkTimer = setInterval(async()=>{
+    try{
+      const txt = await fetchUrlViaAPI();
+      if(!txt || txt==='offline' || !txt.startsWith('https://')){
+        failCount++;
+        if(failCount >= MAX_FAIL) showOffline();
+      } else {
+        failCount = 0;
+        if(txt !== frame.src) showApp(txt);
+      }
+    }catch(e){
+      failCount++;
+      if(failCount >= MAX_FAIL) showOffline();
+    }
+  }, CHECK_INTERVAL);
+}
+
+async function startApp(){
+  if(isBusy) return;
+  isBusy = true;
+  clearAllTimers();
+  if(retryCD) retryCD.style.display='none';
+  if(retryBtn) retryBtn.disabled=true;
+
+  splash.style.display  = 'flex';
+  offline.style.display = 'none';
+  appwrap.style.display = 'none';
+  if(frame){ frame.src='about:blank'; frame.style.display='none'; }
+
+  setStatus('Inapakua URL ya server...');
+  await sleep(300);
+
+  try{
+    const url = await fetchUrlViaAPI();
+
+    if(!url || url==='offline' || !url.startsWith('https://')){
+      setStatus('Server imezimwa...');
+      await sleep(900);
+      showOffline();
+      return;
+    }
+
+    setStatus('Inafungua app...');
+    await sleep(400);
+    showApp(url);
+
+  }catch(e){
+    setStatus('Hakuna muunganiko...');
+    await sleep(900);
+    showOffline();
+  }
+}
+
+function goHome(){ if(currentUrl) frame.src=currentUrl; }
+function goBack(){ try{ frame.contentWindow.history.back(); }catch(e){} }
+
+window.addEventListener('load', startApp);
+
+window.addEventListener('popstate', ()=>{
+  if(appwrap.style.display==='flex'){
+    frame.src='about:blank';
+    showOffline();
+  }
+});
+    </script>
+    
