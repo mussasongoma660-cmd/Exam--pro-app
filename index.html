@@ -7,71 +7,89 @@
 <meta name="theme-color" content="#080c18">
 <title>Exam Pro Academy</title>
 <link rel="manifest" href="manifest.json">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:sans-serif;background:#080c18;color:#e8eef8;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+#splash{position:fixed;inset:0;background:#080c18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
+#splash.hide{opacity:0;pointer-events:none}
+.ring{width:80px;height:80px;border-radius:50%;border:3px solid #1a2540;border-top-color:#3b6ef8;border-right-color:#3b6ef8;animation:spin 1s linear infinite;display:flex;align-items:center;justify-content:center;margin-bottom:24px}
+@keyframes spin{to{transform:rotate(360deg)}}
+h1{font-size:1.4em;font-weight:800;margin-bottom:6px}
+.sub{font-size:.78em;color:#4a5980;margin-bottom:32px}
+#status{font-size:.82em;color:#4a5980;text-align:center;padding:0 32px}
+#offline{display:none;position:fixed;inset:0;background:#080c18;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;z-index:999}
+#offline.show{display:flex}
+.btn{background:#1d4ed8;color:#fff;border:none;padding:13px 0;border-radius:12px;font-size:.88em;font-weight:600;width:100%;max-width:260px;cursor:pointer;margin-bottom:10px}
+#appwrap{display:none;flex-direction:column;flex:1}
+#appwrap.show{display:flex}
+.topbar{background:#080c18;border-bottom:1px solid #1a2540;padding:8px 14px;display:flex;align-items:center;gap:10px;min-height:42px}
+.brand{font-weight:700;font-size:.85em;color:#93c5fd;flex:1}
+.live{font-size:.68em;color:#10b981;background:#10b98115;border:1px solid #10b98130;padding:3px 9px;border-radius:20px}
+iframe{flex:1;border:none;width:100%;background:#080c18}
+.botbar{background:#080c18;border-top:1px solid #1a2540;padding:8px 12px;display:flex;gap:8px}
+.bb{flex:1;background:#0d1525;border:1px solid #1a2540;color:#e8eef8;padding:10px 4px;border-radius:10px;font-size:.76em;font-weight:600;cursor:pointer}
+.bb.p{background:#1d3a8a;border-color:#3b6ef8;color:#fff}
+</style>
 </head>
-<body style="margin:0;background:#080c18;color:#e8eef8;font-family:sans-serif;display:flex;flex-direction:column;height:100vh">
-<div id="splash" style="position:fixed;inset:0;background:#080c18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000">
-  <div style="font-size:4em;margin-bottom:20px">🎓</div>
-  <div style="font-size:1.4em;font-weight:800;margin-bottom:8px">Exam Pro Academy</div>
-  <div style="font-size:.8em;color:#4a5980;margin-bottom:40px">NTA LEVEL 4 · 5 · 6</div>
-  <div id="status" style="font-size:.85em;color:#4a5980">Inaungana na server...</div>
+<body>
+<div id="splash">
+  <div class="ring"><div style="font-size:2em">🎓</div></div>
+  <h1>Exam Pro Academy</h1>
+  <div class="sub">NTA LEVEL 4 · 5 · 6</div>
+  <div id="status">Inapakua URL ya server...</div>
 </div>
-<div id="offline" style="display:none;position:fixed;inset:0;background:#080c18;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center">
-  <div style="font-size:3em;margin-bottom:16px">📡</div>
+<div id="offline">
+  <div style="font-size:3.5em;margin-bottom:16px">📡</div>
   <div style="font-size:1.2em;font-weight:800;color:#ef4444;margin-bottom:8px">Server Imezimwa</div>
-  <div style="font-size:.85em;color:#4a5980;margin-bottom:28px">Mwambie admin awashe server, kisha jaribu tena.</div>
-  <button onclick="startApp()" style="background:#1d4ed8;color:#fff;border:none;padding:14px 36px;border-radius:14px;font-size:.9em;font-weight:600;width:100%;max-width:260px">🔄 Jaribu Tena</button>
+  <div style="font-size:.83em;color:#4a5980;line-height:1.6;margin-bottom:24px">Mwambie admin awashe server, kisha jaribu tena.</div>
+  <button class="btn" onclick="startApp()">🔄 Jaribu Tena</button>
 </div>
-<div id="appwrap" style="display:none;flex-direction:column;flex:1">
-  <div style="background:#080c18;border-bottom:1px solid #1a2540;padding:8px 16px;display:flex;align-items:center">
-    <span style="font-weight:700;color:#93c5fd;flex:1">🎓 Exam Pro Academy</span>
-    <span style="font-size:.7em;color:#10b981;background:#10b98115;border:1px solid #10b98130;padding:3px 9px;border-radius:20px">● LIVE</span>
+<div id="appwrap">
+  <div class="topbar">
+    <span class="brand">🎓 Exam Pro Academy</span>
+    <span class="live">● LIVE</span>
   </div>
-  <iframe id="frame" src="about:blank" style="flex:1;border:none;width:100%;background:#080c18"></iframe>
-  <div style="background:#080c18;border-top:1px solid #1a2540;padding:8px 16px;display:flex;gap:8px">
-    <button onclick="goHome()" style="flex:1;background:#0d1525;border:1px solid #1a2540;color:#e8eef8;padding:10px;border-radius:10px;font-size:.78em;font-weight:600">🏠 Home</button>
-    <button onclick="goBack()" style="flex:1;background:#0d1525;border:1px solid #1a2540;color:#e8eef8;padding:10px;border-radius:10px;font-size:.78em;font-weight:600">← Rudi</button>
-    <button onclick="startApp()" style="flex:1;background:#1d4ed8;border:1px solid #3b6ef8;color:#fff;padding:10px;border-radius:10px;font-size:.78em;font-weight:600">🔄 Reload</button>
+  <iframe id="frame" src="about:blank" allow="camera;microphone;fullscreen"></iframe>
+  <div class="botbar">
+    <button class="bb" onclick="goHome()">🏠 Home</button>
+    <button class="bb" onclick="goBack()">← Rudi</button>
+    <button class="bb p" onclick="startApp()">🔄 Reload</button>
   </div>
 </div>
 <script>
-const TG_BOT_TOKEN = "8429654460:AAGJ6NRMCERnBQIT4APAT0EVaFqZbIr9MJM";
-const TG_CHAT_ID = "5927692010";
-let currentUrl = null;
-function setStatus(m){ document.getElementById('status').textContent = m; }
+const RAW_URL="https://raw.githubusercontent.com/mussasongoma660-cmd/Exam--pro-app/main/url.txt";
+let currentUrl=null;
+function setStatus(m){document.getElementById('status').textContent=m;}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function showOffline(){
-  document.getElementById('splash').style.display='none';
-  document.getElementById('offline').style.display='flex';
-  document.getElementById('appwrap').style.display='none';
+  document.getElementById('splash').classList.add('hide');
+  document.getElementById('offline').classList.add('show');
+  document.getElementById('appwrap').classList.remove('show');
 }
 function showApp(url){
   currentUrl=url;
   document.getElementById('frame').src=url;
   setTimeout(()=>{
-    document.getElementById('splash').style.display='none';
-    document.getElementById('offline').style.display='none';
-    document.getElementById('appwrap').style.display='flex';
-  },500);
+    document.getElementById('splash').classList.add('hide');
+    document.getElementById('offline').classList.remove('show');
+    document.getElementById('appwrap').classList.add('show');
+  },600);
 }
 async function startApp(){
-  document.getElementById('splash').style.display='flex';
-  document.getElementById('offline').style.display='none';
-  document.getElementById('appwrap').style.display='none';
-  setStatus('Inaomba URL kutoka Telegram...');
+  document.getElementById('splash').classList.remove('hide');
+  document.getElementById('splash').style.opacity='1';
+  document.getElementById('offline').classList.remove('show');
+  document.getElementById('appwrap').classList.remove('show');
+  setStatus('Inapakua URL ya server...');
   try{
-    const r=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/getUpdates?limit=20`);
-    const d=await r.json();
-    let url=null;
-    const updates=d.result||[];
-    for(let i=updates.length-1;i>=0;i--){
-      const txt=updates[i]?.message?.text||'';
-      const m=txt.match(/https:\/\/[a-zA-Z0-9\-]+\.trycloudflare\.com/);
-      if(m){url=m[0];break;}
-    }
-    if(!url){setStatus('Server imezimwa...');await new Promise(r=>setTimeout(r,1500));showOffline();return;}
+    const res=await fetch(RAW_URL+'?t='+Date.now(),{cache:'no-store'});
+    if(!res.ok){setStatus('Server imezimwa...');await sleep(1500);showOffline();return;}
+    const url=(await res.text()).trim();
+    if(!url||!url.startsWith('https://')){setStatus('Server imezimwa...');await sleep(1500);showOffline();return;}
     setStatus('URL imepatikana ✓ Inaunganisha...');
-    await new Promise(r=>setTimeout(r,800));
+    await sleep(700);
     showApp(url);
-  }catch(e){setStatus('Hitilafu ya mtandao');await new Promise(r=>setTimeout(r,1500));showOffline();}
+  }catch(e){setStatus('Hitilafu ya mtandao');await sleep(1500);showOffline();}
 }
 function goHome(){if(currentUrl)document.getElementById('frame').src=currentUrl;}
 function goBack(){try{document.getElementById('frame').contentWindow.history.back();}catch(e){}}
