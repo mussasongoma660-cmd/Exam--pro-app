@@ -95,12 +95,16 @@ async function startApp(){
     // Redirect moja kwa moja — bila iframe
     window.location.href = url;
 
-  }catch(e){
-    setStatus('Hitilafu ya mtandao');
-    await sleep(1200);
-    showOffline();
-  }
-}
+  // Angalia URL inafanya kazi kabla ya redirect
+    try{
+      await fetch(url, {mode:'no-cors', cache:'no-store'});
+      window.location.href = url;
+    }catch(err){
+      setStatus('Server imezimwa...');
+      await sleep(1200);
+      showOffline();
+      return;
+    }
 
 window.addEventListener('load', startApp);
 </script>
