@@ -1,1 +1,1 @@
-https://fleece-friends-vehicles-steve.trycloudflare.com
+https://api.trycloudflare.com
