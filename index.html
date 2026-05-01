@@ -272,7 +272,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:#080c18;color:#e8eef
 
 <script>
 /* ════════════════════════════════════════════════════
-   EXAM PRO ACADEMY — index.html  (FIXED)
+   EXAM PRO ACADEMY — index.html (FIXED COMPLETE)
    Mfumo: GitHub API → url.txt → iframe app
    ════════════════════════════════════════════════════ */
 
@@ -296,7 +296,7 @@ const $prog     = document.getElementById("prog");
 const $retryBtn = document.getElementById("retryBtn");
 const $retryCD  = document.getElementById("retryCD");
 const $cdSec    = document.getElementById("cdSec");
-const $status   = document.getElementById("statusTxt");  // ✅ ID SAHIHI
+const $status   = document.getElementById("statusTxt");
 
 let _checkTimer  = null;
 let _cdTimer     = null;
@@ -337,21 +337,27 @@ function clearAllTimers() {
 
 /* ── Soma url.txt kutoka GitHub API (haina cache) ─── */
 async function fetchUrlFromGitHub() {
-  const res = await fetch(GITHUB_API_URL, {
-    cache: "no-store",
-    headers: {
-      "Accept":      "application/vnd.github.v3+json",
-      "X-Timestamp": Date.now().toString(),
-    },
-    signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined,
-  });
+  try {
+    const res = await fetch(GITHUB_API_URL, {
+      cache: "no-store",
+      headers: {
+        "Accept":      "application/vnd.github.v3+json",
+        "X-Timestamp": Date.now().toString(),
+      },
+      signal: AbortSignal.timeout ? AbortSignal.timeout(12000) : undefined,
+    });
 
-  if (!res.ok) throw new Error("GH_API_FAIL:" + res.status);
+    if (!res.ok) throw new Error("GH_API_FAIL:" + res.status);
 
-  const json    = await res.json();
-  const b64     = (json.content || "").replace(/\n/g, "").trim();
-  const decoded = atob(b64).trim();
-  return decoded;
+    const json    = await res.json();
+    const b64     = (json.content || "").replace(/\n/g, "").trim();
+    const decoded = atob(b64).trim();
+    console.log("✅ URL kutoka GitHub:", decoded);
+    return decoded;
+  } catch (err) {
+    console.error("❌ GitHub API Error:", err.message);
+    throw err;
+  }
 }
 
 /* ── Live check kila sekunde 15 ─────────────────────── */
@@ -366,16 +372,19 @@ function startLiveCheck() {
       const url = await fetchUrlFromGitHub();
       if (!url || url === "offline" || !url.startsWith("https://")) {
         _failCount++;
+        console.warn(`⚠️ URL check failed (${_failCount}/${MAX_FAIL_COUNT})`);
         if (_failCount >= MAX_FAIL_COUNT) showOffline();
       } else {
         _failCount = 0;
         if (url !== _currentUrl) {
+          console.log("🔄 URL imebadilika, inafungua upya...");
           _currentUrl = url;
           showApp(url);
         }
       }
     } catch (_e) {
       _failCount++;
+      console.warn(`⚠️ URL check failed (${_failCount}/${MAX_FAIL_COUNT}):`, _e.message);
       if (_failCount >= MAX_FAIL_COUNT) showOffline();
     }
   }, CHECK_INTERVAL);
@@ -383,6 +392,7 @@ function startLiveCheck() {
 
 /* ── Onyesha screen ya offline ───────────────────────── */
 function showOffline() {
+  console.log("📡 Inaingia offline mode...");
   clearAllTimers();
   _appReady   = false;
   _currentUrl = null;
@@ -405,6 +415,7 @@ function showOffline() {
       clearInterval(_cdTimer);
       _cdTimer               = null;
       $retryCD.style.display = "none";
+      console.log("🔄 Auto-retrying...");
       startApp();
     }
   }, 1000);
@@ -412,6 +423,7 @@ function showOffline() {
 
 /* ── Fungua app ndani ya iframe ──────────────────────── */
 function showApp(url) {
+  console.log("🚀 Inafungua app:", url);
   clearAllTimers();
   _appReady              = false;
   $retryCD.style.display = "none";
@@ -438,12 +450,14 @@ function showApp(url) {
     $splash.style.display  = "none";
     $offline.style.display = "none";
 
+    console.log("✅ App imefunguka kikamilifu!");
     startLiveCheck();
   };
 
   // Timeout sekunde 45
   _iframeTimer = setTimeout(() => {
     if (!_appReady) {
+      console.error("⏰ Iframe loading timeout!");
       $frame.src = "about:blank";
       showOffline();
     }
@@ -476,10 +490,16 @@ async function startApp() {
       setStatus(`Inawasiliana na GitHub... (${attempt}/3)`);
       setProgress(30 + attempt * 15);
       url = await fetchUrlFromGitHub();
-      if (url && url !== "offline" && url.startsWith("https://")) break;
-      else url = null;
+      // ✅ FIXED: Tumia && badala ya &
+      if (url && url !== "offline" && url.startsWith("https://")) {
+        console.log(`✅ URL imepatikana (attempt ${attempt}):`, url);
+        break;
+      } else {
+        url = null;
+      }
     } catch (_e) {
       url = null;
+      console.error(`❌ Attempt ${attempt} failed:`, _e.message);
     }
     if (attempt < 3) await sleep(3000);
   }
